@@ -1,6 +1,5 @@
 # Claves de servicio de Google/Firebase
 serviceAccountKey.json
-nueva-clave.json # O el nombre exacto de tu nueva clave
 
 # Archivos de logs
 server.log
