@@ -1,73 +1,190 @@
-# client.py
-import socket, json, binascii
-from crypto_utils import generate_salt, derive_verifier, hmac_sha256, gen_nonce_hex, to_hex, from_hex
+# client.py con menú de Registro / Login y submenú Transacción / Logout
+# "Volver al menú principal" ahora realiza LOGOUT real en el servidor.
+import socket, json
+from crypto_utils import derive_verifier, hmac_sha256, gen_nonce_hex, from_hex, to_hex
 import getpass
+import sys
 
 HOST = '127.0.0.1'
 PORT = 5000
 
 def send_json(conn, obj):
-    conn.sendall((json.dumps(obj) + "\n").encode())
+    conn.sendall(json.dumps(obj).encode())
 
 def recv_json(conn):
-    buffer = b""
-    while True:
-        chunk = conn.recv(4096)
-        if not chunk:
-            return None
-        buffer += chunk
-        if b"\n" in buffer:
-            line, rest = buffer.split(b"\n",1)
-            return json.loads(line.decode())
+    data = conn.recv(4096)
+    if not data:
+        return None
+    try:
+        return json.loads(data.decode())
+    except Exception:
+        return None
 
-def register(conn, username, password):
-    send_json(conn, {'type':'REGISTER','username':username,'password':password})
-    return recv_json(conn)
+# ---------- Flujos de autenticación ----------
+def register(conn):
+    print("\n=== Registro ===")
+    username = input("Nuevo username: ").strip()
+    if not username:
+        print("❌ Username vacío")
+        return
 
-def login(conn, username, password):
-    # step 1: request challenge
-    send_json(conn, {'type':'LOGIN_STEP1','username': username})
+    pw1 = getpass.getpass("Nueva contraseña: ")
+    pw2 = getpass.getpass("Repite la contraseña: ")
+    if pw1 != pw2:
+        print("❌ Las contraseñas no coinciden")
+        return
+
+    send_json(conn, {"action": "REGISTER", "username": username, "password": pw1})
     resp = recv_json(conn)
-    if resp['type'] != 'LOGIN_CHALLENGE':
-        return resp
-    salt_hex = resp['salt']
-    server_nonce = resp['server_nonce']
-    # derive verifier locally
+    if not resp:
+        print("❌ Sin respuesta del servidor")
+        return
+    if resp.get("status") == "REGISTER_OK":
+        print("✅ Registro correcto. Ya puedes iniciar sesión.")
+    else:
+        print("❌", resp.get("msg", "No se pudo registrar"))
+
+def login(conn):
+    print("\n=== Login ===")
+    username = input("username: ").strip()
+    password = getpass.getpass("password: ")
+
+    # Paso 1: pedir CHALLENGE
+    send_json(conn, {"action": "LOGIN_STEP1", "username": username})
+    resp = recv_json(conn)
+
+    if not resp:
+        print("❌ Sin respuesta del servidor")
+        return None, None
+
+    if resp.get("status") == "ERROR":
+        print("❌", resp.get("msg", "Usuario o contraseña incorrectos"))
+        return None, None
+
+    if resp.get("status") != "CHALLENGE":
+        print("❌ Protocolo de login inesperado")
+        return None, None
+
+    salt_hex = resp["salt"]
+    server_nonce = resp["server_nonce"]
+
+    # Derivar verifier local
     salt = from_hex(salt_hex)
     verifier = derive_verifier(password, salt)
-    # respond with HMAC(verifier, server_nonce)
-    response_hmac = hmac_sha256(verifier, server_nonce.encode())
+
+    # Cliente genera su nonce
     client_nonce = gen_nonce_hex(16)
-    send_json(conn, {'type':'LOGIN_STEP2','username': username,
-                     'response_hmac': to_hex(response_hmac),
-                     'client_nonce': client_nonce})
+
+    # HMAC(verifier, client_nonce + server_nonce)
+    mac = hmac_sha256(verifier, (client_nonce + server_nonce).encode())
+
+    # Paso 2: enviar respuesta
+    send_json(conn, {
+        "action": "LOGIN_STEP2",
+        "username": username,
+        "client_nonce": client_nonce,
+        "hmac": to_hex(mac)
+    })
     resp2 = recv_json(conn)
-    if resp2['type'] == 'LOGIN_OK':
-        # both sides can compute session_key now the same way:
-        session_key = hmac_sha256(verifier, server_nonce.encode() + client_nonce.encode())
-        return {'status':'OK','session_key': to_hex(session_key)}
-    else:
-        return resp2
 
-def send_transaction(conn, username, session_key_hex, payload):
-    nonce = gen_nonce_hex(16)
+    if resp2 and resp2.get("status") == "LOGIN_OK":
+        # session_key = HMAC(verifier, client_nonce + server_nonce)
+        session_key = hmac_sha256(verifier, (client_nonce + server_nonce).encode())
+        print("✅ Login correcto")
+        return username, to_hex(session_key)
+
+    print("❌", (resp2 or {}).get("msg", "Usuario o contraseña incorrectos"))
+    return None, None
+
+# ---------- Operaciones autenticadas ----------
+def send_transaction(conn, username, session_key_hex):
+    print("\n=== Nueva transacción ===")
+    payload = input("Introduce transacción (origen,destino,cantidad): ").strip()
+    if not payload:
+        print("❌ Payload vacío")
+        return
+    nonce = gen_nonce_hex(8)
     session_key = from_hex(session_key_hex)
-    hmac_val = hmac_sha256(session_key, (payload + nonce).encode())
-    send_json(conn, {'type':'TRANSACTION','username':username,
-                     'payload': payload, 'nonce':nonce, 'hmac': to_hex(hmac_val)})
-    return recv_json(conn)
+    mac = hmac_sha256(session_key, (payload + nonce).encode())
+    send_json(conn, {
+        "action": "TRANSACTION",
+        "username": username,
+        "payload": payload,
+        "nonce": nonce,
+        "hmac": to_hex(mac)
+    })
+    resp = recv_json(conn)
+    if not resp:
+        print("❌ Sin respuesta del servidor")
+        return
+    if resp.get("status") == "TRANSACTION_OK":
+        print("✅ Transacción aceptada")
+    else:
+        print("❌", resp.get("msg", "Error en transacción"))
 
-# Ejemplo uso:
+def logout(conn, username):
+    send_json(conn, {"action": "LOGOUT", "username": username})
+    resp = recv_json(conn)
+    if not resp:
+        print("❌ Sin respuesta del servidor")
+        return False
+    if resp.get("status") == "LOGOUT_OK":
+        print("✅ Logout correcto")
+        return True
+    else:
+        print("❌", resp.get("msg", "No se pudo cerrar sesión"))
+        return False
+
+# ---------- Menús ----------
+def menu_principal():
+    print("\n=== Menú principal ===")
+    print("1) Registrarse")
+    print("2) Login")
+    print("3) Salir")
+    return input("Elige opción: ").strip()
+
+def menu_autenticado(username):
+    print(f"\n=== Menú ({username} autenticado) ===")
+    print("1) Hacer transacción")
+    print("2) Logout")
+    print("3) Volver al menú principal (cerrar sesión)")
+    return input("Elige opción: ").strip()
+
+# ---------- Main ----------
 if __name__ == "__main__":
-    s = socket.create_connection((HOST, PORT))
-    username = input("username: ")
-    pw = getpass.getpass("password: ")
-    # descomenta para registrar si hace falta:
-    # print(register(s, username, pw))
-    login_res = login(s, username, pw)
-    print("Login result:", login_res)
-    if login_res.get('status') == 'OK':
-        sk = login_res['session_key']
-        payload = input("Introduce transacción (origen,destino,cantidad): ")
-        print(send_transaction(s, username, sk, payload))
-    s.close()
+    try:
+        with socket.create_connection((HOST, PORT)) as s:
+            username = None
+            session_key_hex = None
+
+            while True:
+                if not username:
+                    op = menu_principal()
+                    if op == "1":
+                        register(s)
+                    elif op == "2":
+                        username, session_key_hex = login(s)
+                    elif op == "3":
+                        print("👋 Hasta luego")
+                        break
+                    else:
+                        print("Opción no válida")
+                else:
+                    op = menu_autenticado(username)
+                    if op == "1":
+                        send_transaction(s, username, session_key_hex)
+                    elif op == "2":
+                        if logout(s, username):
+                            username, session_key_hex = None, None
+                    elif op == "3":
+                        # Volver al menú principal cerrando sesión REAL con el servidor
+                        logout(s, username)
+                        username, session_key_hex = None, None
+                    else:
+                        print("Opción no válida")
+    except ConnectionRefusedError:
+        print(f"❌ No se pudo conectar a {HOST}:{PORT}. ¿Está el servidor arrancado?")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n⏹ Interrumpido por el usuario")
+        sys.exit(0)

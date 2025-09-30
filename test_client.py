@@ -78,15 +78,15 @@ if __name__ == "__main__":
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
 
-        print(register_user(s, "alice", "password123"))
-        resp, session = login(s, "alice", "password123")
+        print(register_user(s, "javi", "password123"))
+        resp, session = login(s, "javi", "password123")
         print(resp)
 
         if resp["status"] == "LOGIN_OK":
-            tx_resp, tx_data = send_transaction(s, "alice", session, "Cuenta1,Cuenta2,100.0")
+            tx_resp, tx_data = send_transaction(s, "javi", session, "Cuenta1,Cuenta2,100.0")
             print(tx_resp)
-            print(replay_transaction(s, "alice", tx_data))
-            print(logout(s, "alice"))
+            print(replay_transaction(s, "javi", tx_data))
+            print(logout(s, "javi"))
 
         # Usuario inexistente
         print(login(s, "bob", "wrongpass"))

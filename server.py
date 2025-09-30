@@ -68,12 +68,27 @@ def handle_login_step1(conn, data):
         else:
             blocked_users.pop(username)
 
-    user_ref = db.collection(USERS_COLLECTION).document(username).get()
-    if not user_ref.exists:
-        conn.send(json.dumps({"status": "ERROR", "msg": "Usuario no encontrado"}).encode())
+    user_doc = db.collection(USERS_COLLECTION).document(username).get()
+    if not user_doc.exists:
+        # No revelamos si existe o no: mismo mensaje genérico al cliente
+        print("Intento erróneo de login")
+        logging.warning(f"LOGIN_FAIL user={username} reason=user_not_found")
+
+        # Registrar intento fallido para protección brute-force
+        entry = login_attempts.get(username, {"fails": 0, "last_fail": None})
+        entry["fails"] += 1
+        entry["last_fail"] = time.time()
+        login_attempts[username] = entry
+
+        if entry["fails"] >= MAX_FAILS:
+            blocked_users[username] = time.time() + BLOCK_TIME
+            logging.warning(f"LOGIN_BLOCK user={username}")
+            conn.send(json.dumps({"status": "ERROR", "msg": "Usuario bloqueado por fallos"}).encode())
+        else:
+            conn.send(json.dumps({"status": "ERROR", "msg": "Usuario o contraseña incorrectos"}).encode())
         return
 
-    user_data = user_ref.to_dict()
+    user_data = user_doc.to_dict()
     salt = user_data["salt"]
     server_nonce = gen_nonce_hex(16)
 
@@ -85,10 +100,27 @@ def handle_login_step1(conn, data):
 def handle_login_step2(conn, data):
     username = data.get("username")
     client_nonce = data.get("client_nonce")
-    client_hmac = from_hex(data.get("hmac"))
+    hmac_hex = data.get("hmac")
+
+    # Validaciones básicas
+    if not username or not client_nonce or not hmac_hex:
+        print("Intento erróneo de login")
+        logging.warning(f"LOGIN_FAIL user={username} reason=missing_fields")
+        conn.send(json.dumps({"status": "ERROR", "msg": "Usuario o contraseña incorrectos"}).encode())
+        return
+
+    try:
+        client_hmac = from_hex(hmac_hex)
+    except Exception:
+        print("Intento erróneo de login")
+        logging.warning(f"LOGIN_FAIL user={username} reason=hmac_decode_error")
+        conn.send(json.dumps({"status": "ERROR", "msg": "Usuario o contraseña incorrectos"}).encode())
+        return
 
     if username not in sessions:
-        conn.send(json.dumps({"status": "ERROR", "msg": "Sesión no iniciada"}).encode())
+        print("Intento erróneo de login")
+        logging.warning(f"LOGIN_FAIL user={username} reason=session_missing")
+        conn.send(json.dumps({"status": "ERROR", "msg": "Usuario o contraseña incorrectos"}).encode())
         return
 
     verifier = sessions[username]["verifier"]
@@ -110,19 +142,31 @@ def handle_login_step2(conn, data):
         entry["last_fail"] = time.time()
         login_attempts[username] = entry
 
+        print("Intento erróneo de login")
+        logging.warning(f"LOGIN_FAIL user={username} reason=bad_hmac fails={entry['fails']}")
+
         if entry["fails"] >= MAX_FAILS:
             blocked_users[username] = time.time() + BLOCK_TIME
             logging.warning(f"LOGIN_BLOCK user={username}")
             conn.send(json.dumps({"status": "ERROR", "msg": "Usuario bloqueado por fallos"}).encode())
         else:
-            logging.warning(f"LOGIN_FAIL user={username}")
-            conn.send(json.dumps({"status": "ERROR", "msg": "Credenciales inválidas"}).encode())
+            conn.send(json.dumps({"status": "ERROR", "msg": "Usuario o contraseña incorrectos"}).encode())
 
 def handle_transaction(conn, data):
     username = data.get("username")
     payload = data.get("payload")
     nonce = data.get("nonce")
-    received_hmac = from_hex(data.get("hmac"))
+    hmac_hex = data.get("hmac")
+
+    if not username or not payload or not nonce or not hmac_hex:
+        conn.send(json.dumps({"status": "ERROR", "msg": "Petición inválida"}).encode())
+        return
+
+    try:
+        received_hmac = from_hex(hmac_hex)
+    except Exception:
+        conn.send(json.dumps({"status": "ERROR", "msg": "Petición inválida"}).encode())
+        return
 
     if username not in sessions or "client_nonce" not in sessions[username]:
         conn.send(json.dumps({"status": "ERROR", "msg": "Usuario no autenticado"}).encode())
@@ -144,7 +188,12 @@ def handle_transaction(conn, data):
     if secure_compare(expected_hmac, received_hmac):
         sessions[username]["last_nonce"] = nonce
 
-        origen, destino, cantidad = payload.split(",")
+        try:
+            origen, destino, cantidad = payload.split(",")
+        except Exception:
+            conn.send(json.dumps({"status": "ERROR", "msg": "Payload inválido"}).encode())
+            return
+
         db.collection(TRANSACTIONS_COLLECTION).add({
             "from": origen.strip(),
             "to": destino.strip(),
@@ -180,7 +229,8 @@ def client_thread(conn, addr):
                 break
             data = json.loads(data.decode())
 
-            action = data.get("action")
+            action = data.get("action") or data.get("type")
+
             if action == "REGISTER":
                 handle_register(conn, data)
             elif action == "LOGIN_STEP1":
