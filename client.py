@@ -115,12 +115,11 @@ def send_transaction(conn, username, session_key_hex):
     })
     resp = recv_json(conn)
     if not resp:
-        print("❌ Sin respuesta del servidor")
+        print("❌ Error en transacción")
         return
-    if resp.get("status") == "TRANSACTION_OK":
+    elif resp.get("status") == "TRANSACTION_OK":
         print("✅ Transacción aceptada")
-    else:
-        print("❌", resp.get("msg", "Error en transacción"))
+    
 
 def logout(conn, username):
     send_json(conn, {"action": "LOGOUT", "username": username})
