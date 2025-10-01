@@ -194,6 +194,7 @@ def handle_transaction(conn, data):
             conn.send(json.dumps({"status": "ERROR", "msg": "Payload inválido"}).encode())
             return
 
+        # Guardamos la transacción con el usuario que la realizó
         db.collection(TRANSACTIONS_COLLECTION).add({
             "from": origen.strip(),
             "to": destino.strip(),
@@ -201,7 +202,8 @@ def handle_transaction(conn, data):
             "payload": payload,
             "nonce": nonce,
             "hmac": to_hex(received_hmac),
-            "timestamp": firestore.SERVER_TIMESTAMP
+            "timestamp": firestore.SERVER_TIMESTAMP,
+            "performed_by": username   # <-- añadido
         })
 
         logging.info(f"TRANSACTION_OK user={username} payload={payload} nonce={nonce}")
