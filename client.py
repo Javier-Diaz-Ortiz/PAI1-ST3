@@ -115,12 +115,11 @@ def send_transaction(conn, username, session_key_hex):
     })
     resp = recv_json(conn)
     if not resp:
-        print("❌ Sin respuesta del servidor")
+        print("❌ Error en transacción")
         return
-    if resp.get("status") == "TRANSACTION_OK":
+    elif resp.get("status") == "TRANSACTION_OK":
         print("✅ Transacción aceptada")
-    else:
-        print("❌", resp.get("msg", "Error en transacción"))
+    
 
 def logout(conn, username):
     send_json(conn, {"action": "LOGOUT", "username": username})
@@ -147,7 +146,6 @@ def menu_autenticado(username):
     print(f"\n=== Menú ({username} autenticado) ===")
     print("1) Hacer transacción")
     print("2) Logout")
-    print("3) Volver al menú principal (cerrar sesión)")
     return input("Elige opción: ").strip()
 
 # ---------- Main ----------
@@ -176,10 +174,6 @@ if __name__ == "__main__":
                     elif op == "2":
                         if logout(s, username):
                             username, session_key_hex = None, None
-                    elif op == "3":
-                        # Volver al menú principal cerrando sesión REAL con el servidor
-                        logout(s, username)
-                        username, session_key_hex = None, None
                     else:
                         print("Opción no válida")
     except ConnectionRefusedError:
