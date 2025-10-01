@@ -20,3 +20,20 @@
 2025-09-30 12:03:27,232 INFO LOGIN_OK user=alice
 2025-09-30 12:03:29,598 INFO LOGOUT_OK user=alice
 2025-09-30 12:05:53,155 INFO REGISTER_OK user=marta
+2025-10-01 09:27:02,263 INFO REGISTER_OK user=angel
+2025-10-01 09:27:20,214 WARNING LOGIN_FAIL user=angel reason=bad_hmac fails=1
+2025-10-01 09:27:32,713 WARNING LOGIN_FAIL user=angel reason=bad_hmac fails=2
+2025-10-01 09:28:35,451 WARNING LOGIN_FAIL user=angel reason=bad_hmac fails=3
+2025-10-01 09:28:35,451 WARNING LOGIN_BLOCK user=angel
+2025-10-01 09:29:10,434 WARNING LOGIN_FAIL user=alicia reason=user_not_found
+2025-10-01 09:29:20,290 INFO LOGIN_OK user=alice
+2025-10-01 09:29:59,143 INFO TRANSACTION_OK user=alice payload=1,2,100 nonce=5eedb7d053d57fee
+2025-10-01 09:36:15,221 INFO LOGIN_OK user=javi
+2025-10-01 09:36:15,221 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-01 09:36:15,416 INFO TRANSACTION_OK user=javi payload=Cuenta1,Cuenta2,100.0 nonce=97e9c8e188e7aedc
+2025-10-01 09:36:15,418 INFO LOGOUT_OK user=javi
+2025-10-01 09:36:15,930 WARNING LOGIN_FAIL user=bob reason=bad_hmac fails=1
+2025-10-01 09:36:16,097 WARNING LOGIN_FAIL user=alice reason=bad_hmac fails=1
+2025-10-01 09:36:16,252 WARNING LOGIN_FAIL user=alice reason=bad_hmac fails=2
+2025-10-01 09:36:16,522 WARNING LOGIN_FAIL user=alice reason=bad_hmac fails=3
+2025-10-01 09:36:16,522 WARNING LOGIN_BLOCK user=alice
