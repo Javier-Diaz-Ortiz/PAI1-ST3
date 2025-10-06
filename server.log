@@ -53,3 +53,110 @@
 2025-10-01 09:19:31,283 INFO LOGIN_OK user=jorge
 2025-10-01 09:23:01,917 INFO LOGIN_OK user=jorge
 >>>>>>> ea2ac5d42cfcd5194ad3a23c7dfc119f3246842c
+2025-10-01 10:15:28,639 INFO LOGIN_OK user=angel
+2025-10-01 10:15:35,285 INFO TRANSACTION_OK user=angel payload=1,2,3 nonce=a7f13e0b93ed182d
+2025-10-06 19:00:24,018 INFO LOGIN_OK user=javi
+2025-10-06 19:00:24,225 INFO TRANSACTION_OK user=javi payload=Cuenta1,Cuenta2,100.0 nonce=b2772ff1a19bf9b7
+2025-10-06 19:00:24,227 WARNING TRANSACTION_FAIL user=javi reason=replay_detected
+2025-10-06 19:00:24,228 WARNING TRANSACTION_FAIL user=javi reason=replay_detected
+2025-10-06 19:00:24,231 WARNING TRANSACTION_FAIL user=javi reason=replay_detected
+2025-10-06 19:00:24,232 INFO LOGOUT_OK user=javi
+2025-10-06 19:00:24,723 WARNING LOGIN_FAIL user=nonexistent_user reason=user_not_found
+2025-10-06 19:00:24,939 WARNING LOGIN_FAIL user=alice reason=bad_hmac fails=1
+2025-10-06 19:00:25,427 WARNING LOGIN_FAIL user=alice reason=bad_hmac fails=2
+2025-10-06 19:00:25,727 WARNING LOGIN_FAIL user=alice reason=bad_hmac fails=3
+2025-10-06 19:00:25,727 WARNING LOGIN_BLOCK user=alice
+2025-10-06 19:00:26,473 INFO LOGIN_OK user=javi
+2025-10-06 19:00:26,677 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=04ae953c147fb9d3
+2025-10-06 19:00:26,679 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:27,195 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=b5ca8315c420b835
+2025-10-06 19:00:27,196 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:27,404 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=b52586ace4cd43ca
+2025-10-06 19:00:27,405 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:27,983 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=97dc2d0bfe78b9a9
+2025-10-06 19:00:27,983 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:28,397 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=7037c71921edef91
+2025-10-06 19:00:28,397 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:28,864 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=f15d5d496b79003d
+2025-10-06 19:00:28,865 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:29,127 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=8dfdebf273651893
+2025-10-06 19:00:29,128 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:29,665 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=48e4509011913a97
+2025-10-06 19:00:29,666 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:29,966 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=d136b94d1cca9865
+2025-10-06 19:00:29,966 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:30,396 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=5ac11dd576e27670
+2025-10-06 19:00:30,396 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:30,712 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=e3cddc78862b1a3c
+2025-10-06 19:00:30,712 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:31,117 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=de2126720e92500e
+2025-10-06 19:00:31,118 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:31,444 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=504b0a63132decee
+2025-10-06 19:00:31,445 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:31,830 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=845805184668256c
+2025-10-06 19:00:31,831 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:32,154 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=5d0b82c80a35dadb
+2025-10-06 19:00:32,156 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:32,556 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=273c049788a927e6
+2025-10-06 19:00:32,557 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:32,869 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=c6008c487f7f3edc
+2025-10-06 19:00:32,870 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:33,281 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=c56fe20b3f0c27bd
+2025-10-06 19:00:33,282 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:33,589 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=e95e2869f01f94c1
+2025-10-06 19:00:33,590 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:00:34,005 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=e8368ddd8fa92f01
+2025-10-06 19:00:34,005 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:09:12,730 INFO REGISTER_OK user=jorgete
+2025-10-06 19:13:39,920 INFO LOGIN_OK user=javi
+2025-10-06 19:13:39,923 INFO TRANSACTION_OK user=javi payload=Cuenta1,Cuenta2,100.0 nonce=22e20ddf8e05a14d
+2025-10-06 19:13:39,925 WARNING TRANSACTION_FAIL user=javi reason=replay_detected
+2025-10-06 19:13:39,927 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:39,929 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:39,930 INFO LOGOUT_OK user=javi
+2025-10-06 19:13:40,635 WARNING LOGIN_FAIL user=nonexistent_user reason=user_not_found
+2025-10-06 19:13:40,797 WARNING LOGIN_FAIL user=alice reason=bad_hmac fails=1
+2025-10-06 19:13:41,347 WARNING LOGIN_FAIL user=alice reason=bad_hmac fails=2
+2025-10-06 19:13:41,539 WARNING LOGIN_FAIL user=alice reason=bad_hmac fails=3
+2025-10-06 19:13:41,539 WARNING LOGIN_BLOCK user=alice
+2025-10-06 19:13:42,315 INFO LOGIN_OK user=javi
+2025-10-06 19:13:42,316 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=475bdf4750988a2e
+2025-10-06 19:13:42,318 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,319 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=89bc982c8a947ac0
+2025-10-06 19:13:42,320 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,323 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=91c8017ae0e12f8d
+2025-10-06 19:13:42,325 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,326 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=60e58c8250b1a3f9
+2025-10-06 19:13:42,327 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,328 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=39dc6d6cb3e4fdaa
+2025-10-06 19:13:42,331 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,332 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=5f6364d8c7727db9
+2025-10-06 19:13:42,334 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,336 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=c99ab67d979e080a
+2025-10-06 19:13:42,338 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,340 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=842736ce30f2e08a
+2025-10-06 19:13:42,342 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,345 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=04c8ad6ca0090b4d
+2025-10-06 19:13:42,347 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,348 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=f2c128e962a3b426
+2025-10-06 19:13:42,350 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,352 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=41f2975233a21bff
+2025-10-06 19:13:42,355 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,356 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=24a9bf0176073ea7
+2025-10-06 19:13:42,358 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,360 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=c61cef3f17da21fe
+2025-10-06 19:13:42,366 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,367 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=f079dcaa8eba9132
+2025-10-06 19:13:42,370 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,372 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=930dfab3b65d6e0a
+2025-10-06 19:13:42,374 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,376 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=8acc22b09f245f0d
+2025-10-06 19:13:42,378 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,380 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=1b6a9013005e6fbf
+2025-10-06 19:13:42,382 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,384 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=79506380930be505
+2025-10-06 19:13:42,386 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,388 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=10fc5aa98f4ddeb2
+2025-10-06 19:13:42,423 WARNING TRANSACTION_FAIL user=javi reason=integrity_error
+2025-10-06 19:13:42,424 INFO TRANSACTION_OK user=javi payload=C1,C2,1.0 nonce=814dac2be31e787b
+2025-10-06 19:13:42,427 WARNING TRANSACTION_FAIL user=javi reason=integrity_error

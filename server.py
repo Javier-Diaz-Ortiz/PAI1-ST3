@@ -29,6 +29,13 @@ blocked_users = {}      # { username: unblock_timestamp }
 MAX_FAILS = 3
 BLOCK_TIME = 60  # segundos de bloqueo
 
+# --- Utilidad asíncrona para almacenar transacciones ---
+def _store_transaction_async(doc):
+    try:
+        db.collection(TRANSACTIONS_COLLECTION).add(doc)
+    except Exception as e:
+        logging.error(f"ERROR storing transaction async: {e}")
+
 # --- Funciones principales ---
 def handle_register(conn, data):
     username = data.get("username")
@@ -153,6 +160,11 @@ def handle_login_step2(conn, data):
             conn.send(json.dumps({"status": "ERROR", "msg": "Usuario o contraseña incorrectos"}).encode())
 
 def handle_transaction(conn, data):
+    """
+    Verificación criptográfica primero, respuesta inmediata al cliente,
+    almacenamiento en Firestore en background para evitar que la latencia
+    de I/O (DB write) introduzca una diferencia temporal entre rutas OK/FAIL.
+    """
     username = data.get("username")
     payload = data.get("payload")
     nonce = data.get("nonce")
@@ -172,7 +184,7 @@ def handle_transaction(conn, data):
         conn.send(json.dumps({"status": "ERROR", "msg": "Usuario no autenticado"}).encode())
         return
 
-    # Replay attack check
+    # Replay attack check (si coincide nonce usado -> replay)
     if sessions[username].get("last_nonce") == nonce:
         logging.warning(f"TRANSACTION_FAIL user={username} reason=replay_detected")
         conn.send(json.dumps({"status": "ERROR", "msg": "Replay detectado"}).encode())
@@ -185,32 +197,38 @@ def handle_transaction(conn, data):
     session_key = hmac_sha256(verifier, (client_nonce + server_nonce).encode())
     expected_hmac = hmac_sha256(session_key, (payload + nonce).encode())
 
-    if secure_compare(expected_hmac, received_hmac):
-        sessions[username]["last_nonce"] = nonce
+    # 1) Verificación criptográfica (comparación en tiempo constante)
+    if not secure_compare(expected_hmac, received_hmac):
+        logging.warning(f"TRANSACTION_FAIL user={username} reason=integrity_error")
+        # responder rápido, sin I/O pesado
+        conn.send(json.dumps({"status": "ERROR", "msg": "Integridad fallida"}).encode())
+        return
 
-        try:
-            origen, destino, cantidad = payload.split(",")
-        except Exception:
-            conn.send(json.dumps({"status": "ERROR", "msg": "Payload inválido"}).encode())
-            return
+    # 2) Si OK: marcar nonce (previene replay) y preparar doc
+    sessions[username]["last_nonce"] = nonce
 
-        # Guardamos la transacción con el usuario que la realizó
-        db.collection(TRANSACTIONS_COLLECTION).add({
+    try:
+        origen, destino, cantidad = payload.split(",")
+        doc = {
             "from": origen.strip(),
             "to": destino.strip(),
             "amount": float(cantidad),
             "payload": payload,
             "nonce": nonce,
             "hmac": to_hex(received_hmac),
-            "timestamp": firestore.SERVER_TIMESTAMP,
-            "performed_by": username   # <-- añadido
-        })
+            "performed_by": username,
+            "timestamp": firestore.SERVER_TIMESTAMP
+        }
+    except Exception:
+        conn.send(json.dumps({"status": "ERROR", "msg": "Payload inválido"}).encode())
+        return
 
-        logging.info(f"TRANSACTION_OK user={username} payload={payload} nonce={nonce}")
-        conn.send(json.dumps({"status": "TRANSACTION_OK"}).encode())
-    else:
-        logging.warning(f"TRANSACTION_FAIL user={username} reason=integrity_error")
-        conn.send(json.dumps({"status": "ERROR", "msg": "Integridad fallida"}).encode())
+    # 3) Responder OK inmediatamente (evitar incluir I/O en latencia)
+    conn.send(json.dumps({"status": "TRANSACTION_OK"}).encode())
+    logging.info(f"TRANSACTION_OK user={username} payload={payload} nonce={nonce}")
+
+    # 4) Guardar la transacción en background (no bloqueante)
+    threading.Thread(target=_store_transaction_async, args=(doc,), daemon=True).start()
 
 def handle_logout(conn, data):
     username = data.get("username")

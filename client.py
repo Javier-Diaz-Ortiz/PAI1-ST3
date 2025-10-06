@@ -4,6 +4,7 @@ import socket, json
 from crypto_utils import derive_verifier, hmac_sha256, gen_nonce_hex, from_hex, to_hex
 import getpass
 import sys
+import re
 
 HOST = '127.0.0.1'
 PORT = 5000
@@ -20,6 +21,20 @@ def recv_json(conn):
     except Exception:
         return None
 
+# Función para validar contraseña segura
+def validar_contrasena(password):
+    if len(password) < 8:
+        return "Debe tener al menos 8 caracteres."
+    if not re.search(r"[a-z]", password):
+        return "Debe contener al menos una letra minuscula."
+    if not re.search(r"[A-Z]", password):
+        return "Debe contener al menos una letra mayuscula."
+    if not re.search(r"\d", password):
+        return "Debe contener al menos un numero."
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-\[\]\\;/]", password):
+        return "Debe contener al menos un caracter especial."
+    return None
+
 # ---------- Flujos de autenticación ----------
 def register(conn):
     print("\n=== Registro ===")
@@ -30,6 +45,11 @@ def register(conn):
 
     pw1 = getpass.getpass("Nueva contraseña: ")
     pw2 = getpass.getpass("Repite la contraseña: ")
+
+    error = validar_contrasena(pw1)
+    if error:
+        print(f"❌ Contraseña insegura: {error}")
+        return
     if pw1 != pw2:
         print("❌ Las contraseñas no coinciden")
         return
